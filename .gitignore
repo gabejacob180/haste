@@ -38,3 +38,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/public/haste-c1520-firebase-adminsdk-fbsvc-1f89ec9598.json

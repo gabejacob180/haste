@@ -1,5 +1,5 @@
-import { Header } from 'components/Header'
 import { useEffect, useState } from 'react'
+import { Header } from './Header'
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isNavOpen, setIsNavOpen] = useState(false)

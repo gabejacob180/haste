@@ -1,3 +1,4 @@
+'use client'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { Button, TextField } from '@mui/material'
@@ -72,33 +73,6 @@ export default function Sign_up() {
     return decodeURIComponent(xsrfCookies[0].split('=')[1])
   }
 
-  //   // Keep pinging backend every five seconds to check if user is verified
-  //   async function pingVerify() {
-  //     fetch('http://localhost:3001/api/auth/ping', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/x-www-form-urlencoded',
-  //         Accept: 'application/json'
-  //       },
-  //       body: `email=${email}`
-  //     })
-  //       .then((response) => {
-  //         if (response.ok) {
-  //           return response.json()
-  //         } else if (response.status == 500) {
-  //           setErrMsg('Server error, resubmit')
-  //         } else if (response.status == 404) {
-  //           setErrMsg('User not found, resubmit')
-  //         }
-  //       })
-  //       .then((data) => {
-  //         data = JSON.parse(data)
-  //         if (data.verified == 'true') {
-  //           router.push('/profile')
-  //         }
-  //       })
-  //   }
-
   // Whenever submit button is clicked, check all states to see if fields are valid before calling to backend
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -121,64 +95,31 @@ export default function Sign_up() {
           return user.user?.getIdToken().then((idToken) => {
             // Session login endpoint is queried and the session cookie is set.
             // CSRF protection should be taken into account.
-            // ...
-
             const csrfToken = getCookie('csrfToken')
-            fetch('/sessionLogin', {
+            fetch('http://localhost:3001/api/auth/sessionLogin', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-Token': csrfToken // <-- sent as a custom header
+                'X-CSRF-Token': csrfToken ?? '' // <-- sent as a custom header
               },
+              credentials: 'include',
+              next: { revalidate: false },
               body: JSON.stringify({ idToken })
             }).catch((error) => {
-              const errorCode = error.code
-              const errorMessage = error.message
-              setErrMsg('Error: ' + errorCode + ' ' + errorMessage)
+              setErrMsg('Error: ' + error.code + ' ' + error.message)
             })
           })
         })
-        .then(() => {
-          // A page redirect would suffice as the persistence is set to NONE.
-          return auth.signOut()
-        })
+        // .then(() => {
+        //   // A page redirect would suffice as the persistence is set to NONE.
+        //   return auth.signOut()
+        // })
         .then(() => {
           window.location.assign('/home')
         })
         .catch((error) => {
-          const errorCode = error.code
-          const errorMessage = error.message
-          setErrMsg('Error: ' + errorCode + ' ' + errorMessage)
+          setErrMsg('Error: ' + error.code + ' ' + error.message)
         })
-
-      //   const response = await fetch('http://localhost:3001/api/auth/login', {
-      //     method: 'POST',
-      //     headers: {
-      //       'Content-Type': 'application/x-www-form-urlencoded'
-      //     },
-      //     body: `email=${email}&password=${password}`
-      //   }).then((response) => {
-      //     if (response.ok) {
-      //       return response.json()
-      //     } else if (response.status == 500) {
-      //       setErrMsg('Server error, resubmit login')
-      //     } else if (response.status == 409) {
-      //       setErrMsg(
-      //         'Verified user already exists under email, enter new email or click forgot password'
-      //       )
-      //     } else if (response.status == 406) {
-      //       setErrMsg('Invalid email, re-enter address and submit')
-      //     }
-      //   })
-
-      //   // Keep asking backend if user is verified
-      //   pingVerify()
-      //   const intervalPing = setInterval(() => {
-      //     pingVerify().then((data) => console.log(data))
-      //   }, 5000)
-
-      //   // Cleanup on unmount
-      //   return () => clearInterval(intervalPing)
     }
 
     if (!email) {
