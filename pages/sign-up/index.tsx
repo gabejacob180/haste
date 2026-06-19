@@ -5,7 +5,12 @@ import { Button, TextField } from '@mui/material'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
 import { initializeApp } from 'firebase/app'
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
+import {
+    browserSessionPersistence,
+    createUserWithEmailAndPassword,
+    getAuth,
+    setPersistence
+} from 'firebase/auth'
 import Link from 'next/link'
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import { Layout } from '../components/Login-Layout'
@@ -23,7 +28,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
 
-export default function Sign_in() {
+export default function Sign_up() {
     const PWD_REGEX =
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[\p{P}\p{S}]).{8,24}$/
     const emailRef = useRef<HTMLInputElement>(null)
@@ -39,16 +44,12 @@ export default function Sign_in() {
     const [pwdFocus, setPwdFocus] = useState(false)
     const [showPwd, setShowPwd] = useState(false)
 
-    useEffect(() => {
-        const servePage = async () => {
-            try {
-                return await fetch('http://localhost:3000/api/auth/servePage')
-            } catch {
-                setErrMsg('Cannot request CSRF token, reload page')
-            }
-        }
+    const [matchPwd, setMatchPwd] = useState('')
+    const [invalidMatch, setInvalidMatch] = useState(false)
+    const [matchFocus, setMatchFocus] = useState(false)
+    const [showMatchPwd, setShowMatchPwd] = useState(false)
 
-        servePage()
+    useEffect(() => {
         if (emailRef.current) {
             emailRef.current.focus()
         }
@@ -76,47 +77,47 @@ export default function Sign_in() {
         event.preventDefault()
 
         // If all fields are valid, send values to backend and
-        if (email && pwd) {
+        if (email && PWD_REGEX.test(pwd) && pwd === matchPwd) {
             const formData = new FormData(event.currentTarget)
             const email = formData.get('email') as string
             const password = formData.get('password') as string
 
             const auth = getAuth()
-            signInWithEmailAndPassword(auth, email, password)
+
+            // As httpOnly cookies are to be used, do not persist any state client side.
+            setPersistence(auth, browserSessionPersistence)
+
+            // When the user signs in with email and password.
+            createUserWithEmailAndPassword(auth, email, password)
                 .then((user) => {
                     // Get the user's ID token as it is needed to exchange for a session cookie.
                     return user.user?.getIdToken().then((idToken) => {
                         // Session login endpoint is queried and the session cookie is set.
                         // CSRF protection should be taken into account.
                         const csrfToken = getCookie('csrfToken')
-                        return fetch(
-                            'http://localhost:3000/api/auth/sessionLogin',
-                            {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-Token': csrfToken ?? '' // <-- sent as a custom header
-                                },
-                                credentials: 'include',
-                                next: {
-                                    revalidate:
-                                        process.env.NODE_ENV === 'development'
-                                            ? false
-                                            : 3600
-                                },
-                                body: JSON.stringify({ idToken })
-                            }
-                        ).catch((error) => {
-                            throw setErrMsg(
+                        fetch('http://localhost:3000/api/auth/sessionLogin', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-Token': csrfToken ?? '' // <-- sent as a custom header
+                            },
+                            credentials: 'include',
+                            next: {
+                                revalidate:
+                                    process.env.NODE_ENV === 'development'
+                                        ? false
+                                        : 3600
+                            },
+                            body: JSON.stringify({ idToken })
+                        }).catch((error) => {
+                            setErrMsg(
                                 'Error: ' + error.code + ' ' + error.message
                             )
                         })
                     })
                 })
-                .then((response) => {
-                    if (response.ok) {
-                        window.location.assign('/home')
-                    }
+                .then(() => {
+                    window.location.assign('/home')
                 })
                 .catch((error) => {
                     setErrMsg('Error: ' + error.code + ' ' + error.message)
@@ -130,13 +131,19 @@ export default function Sign_in() {
             setInvalidEmail(false)
             setEmailFocus(false)
         }
-
-        if (!pwd) {
-            setInvalidPwd(false)
+        if (!PWD_REGEX.test(pwd)) {
+            setInvalidPwd(true)
             setPwdFocus(true)
         } else {
             setInvalidPwd(false)
             setPwdFocus(false)
+        }
+        if (pwd !== matchPwd) {
+            setInvalidMatch(true)
+            setMatchFocus(true)
+        } else {
+            setInvalidMatch(false)
+            setMatchFocus(false)
         }
     }
 
@@ -145,7 +152,7 @@ export default function Sign_in() {
             {/* Main parent element */}
             <section className='rounded-xs mt-10 flex h-[65vh] w-[28vw] flex-col items-center justify-center gap-9 self-center p-10 shadow-[0_0_2px_#b9b9b9]'>
                 <h1 className='self-start pl-7 font-[family-name:DM_Serif_Text] text-4xl font-[505]'>
-                    Sign-in
+                    Register
                 </h1>
                 <p ref={errRef} className='errmsg'>
                     {errMsg}
@@ -153,7 +160,7 @@ export default function Sign_in() {
 
                 {/* Main form */}
                 <form
-                    className='flex w-[20vw] flex-col gap-6 text-[16px]'
+                    className='flex w-[20vw] flex-col gap-4 text-[16px]'
                     onSubmit={handleSubmit}
                     noValidate
                 >
@@ -229,6 +236,59 @@ export default function Sign_in() {
                         required
                     />
 
+                    {/* Confirm password field */}
+                    <TextField
+                        type={showMatchPwd ? 'text' : 'password'}
+                        id='confirm_pwd'
+                        onChange={(e) => setMatchPwd(e.target.value)}
+                        onFocus={() => setMatchFocus(true)}
+                        onBlur={() => setMatchFocus(false)}
+                        onPaste={(e: any) => {
+                            e.preventDefault()
+                        }}
+                        variant='standard'
+                        error={invalidMatch}
+                        helperText={
+                            matchFocus &&
+                            'Must match the first password input field.'
+                        }
+                        label='Confirm Password'
+                        slotProps={{
+                            input: {
+                                endAdornment: (
+                                    <>
+                                        {showMatchPwd ? (
+                                            <InputAdornment position='end'>
+                                                <IconButton
+                                                    onClick={(e) => {
+                                                        setShowMatchPwd(false)
+                                                        e.preventDefault()
+                                                        e.stopPropagation()
+                                                    }}
+                                                >
+                                                    <VisibilityOff />
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ) : (
+                                            <InputAdornment position='end'>
+                                                <IconButton
+                                                    onClick={(e) => {
+                                                        setShowMatchPwd(true)
+                                                        e.preventDefault()
+                                                        e.stopPropagation()
+                                                    }}
+                                                >
+                                                    <Visibility />
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )}
+                                    </>
+                                )
+                            }
+                        }}
+                        required
+                    />
+
                     {/* Submit button */}
                     <Button
                         variant='text'
@@ -246,14 +306,14 @@ export default function Sign_in() {
 
                 {/* Sign-in link */}
                 <p className='self-start pl-7'>
-                    Don't have an account?
+                    Already registered?
                     <br />
                     <Link
                         className='hover:underline'
-                        href='/sign-up'
+                        href='/sign-in'
                         prefetch={false}
                     >
-                        Sign up
+                        Sign in
                     </Link>
                 </p>
             </section>

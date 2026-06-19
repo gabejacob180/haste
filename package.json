@@ -1,55 +1,59 @@
 {
-  "name": "haste",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "lint:fix": "eslint --fix"
-  },
-  "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@material-ui/core": "^4.12.4",
-    "@material-ui/icons": "^4.11.3",
-    "@mui/icons-material": "^7.3.1",
-    "@mui/material": "^7.3.1",
-    "@next/env": "^16.2.2",
-    "firebase": "^12.13.0",
-    "next": "^15.5.11",
-    "react": "19.0.0-rc-66855b96-20241106",
-    "react-dom": "19.0.0-rc-66855b96-20241106"
-  },
-  "devDependencies": {
-    "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^10.0.1",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "@typescript-eslint/eslint-plugin": "^8.56.0",
-    "@typescript-eslint/parser": "^5.62.0",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "15.0.3",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-perfectionist": "^5.6.0",
-    "eslint-plugin-prettier": "^5.5.5",
-    "eslint-plugin-react": "^7.37.5",
-    "globals": "^17.3.0",
-    "jiti": "^2.6.1",
-    "postcss": "^8",
-    "prettier": "^3.8.1",
-    "prettier-eslint": "^16.4.2",
-    "prettier-plugin-tailwindcss": "^0.7.2",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^4.9.5",
-    "typescript-eslint": "^8.55.0"
-  },
-  "plugins": [
-    "prettier-plugin-tailwindcss"
-  ],
-  "lint-staged": {
-    "**/*": "prettier --write --ignore-unknown"
-  }
+    "name": "haste",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "concurrently 'next dev' 'go run main.go'",
+        "build": "next build",
+        "start": "next start",
+        "lint": "eslint",
+        "lint:fix": "eslint --fix"
+    },
+    "dependencies": {
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.1",
+        "@material-ui/core": "^4.12.4",
+        "@material-ui/icons": "^4.11.3",
+        "@mui/icons-material": "^7.3.1",
+        "@mui/material": "^7.3.1",
+        "@next/env": "^16.2.2",
+        "cookie": "^1.1.1",
+        "cookies-next": "^6.1.1",
+        "dotenv": "^17.4.2",
+        "firebase": "^12.13.0",
+        "next": "^15.5.11",
+        "next-auth": "^4.24.14",
+        "react": "19.0.0-rc-66855b96-20241106",
+        "react-dom": "19.0.0-rc-66855b96-20241106"
+    },
+    "devDependencies": {
+        "@eslint/eslintrc": "^3.3.1",
+        "@eslint/js": "^10.0.1",
+        "@types/node": "^20",
+        "@types/react": "^18",
+        "@types/react-dom": "^18",
+        "@typescript-eslint/eslint-plugin": "^8.56.0",
+        "@typescript-eslint/parser": "^5.62.0",
+        "eslint": "^8.57.1",
+        "eslint-config-next": "15.0.3",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-perfectionist": "^5.6.0",
+        "eslint-plugin-prettier": "^5.5.5",
+        "eslint-plugin-react": "^7.37.5",
+        "globals": "^17.3.0",
+        "jiti": "^2.6.1",
+        "postcss": "^8",
+        "prettier": "^3.8.1",
+        "prettier-eslint": "^16.4.2",
+        "prettier-plugin-tailwindcss": "^0.7.2",
+        "tailwindcss": "^3.4.1",
+        "typescript": "^4.9.5",
+        "typescript-eslint": "^8.55.0"
+    },
+    "plugins": [
+        "prettier-plugin-tailwindcss"
+    ],
+    "lint-staged": {
+        "**/*": "prettier --write --ignore-unknown"
+    }
 }
